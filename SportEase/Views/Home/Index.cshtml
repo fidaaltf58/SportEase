@@ -1,20 +1,213 @@
-﻿@{
-    Layout = "_Layout";
+﻿@using SportEase.Web.Models.Entities
+@{
     ViewData["Title"] = "Accueil";
+    var featuredTerrains = ViewBag.FeaturedTerrains as List<Terrain> ?? new List<Terrain>();
 }
 
-<h1 style="color: red; font-size: 50px; text-align: center; margin-top: 50px;">
-    ⚠️ CONTENU DE TEST ⚠️
-</h1>
+<!-- Hero Section -->
+<section class="hero-section bg-gradient-primary text-white py-5">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4 animate-fade-in">
+                    Réservez votre terrain sportif en quelques clics
+                </h1>
+                <p class="lead mb-4">
+                    Trouvez et réservez le terrain parfait pour votre activité sportive à Tunis et ses environs.
+                </p>
+                <div class="d-flex gap-3">
+                    <a asp-controller="Terrain" asp-action="Index" class="btn btn-light btn-lg">
+                        <i class="fas fa-search me-2"></i>Voir les terrains
+                    </a>
+                    @if (!Context.Session.GetInt32("UserId").HasValue)
+                    {
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg">
+                            Inscription gratuite
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-running hero-icon"></i>
+            </div>
+        </div>
+    </div>
+</section>
 
-<p style="text-align: center; font-size: 24px;">
-    Si vous voyez ce texte, le Layout fonctionne correctement !
-</p>
+<!-- Search Section -->
+<section class="search-section py-5 bg-light">
+    <div class="container">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-4">
+                <h3 class="text-center mb-4">Rechercher un terrain</h3>
+                <form asp-controller="Terrain" asp-action="Search" method="get">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Type de sport</label>
+                            <select name="SportType" class="form-select">
+                                <option value="">Tous</option>
+                                <option value="Football">Football</option>
+                                <option value="Basketball">Basketball</option>
+                                <option value="Tennis">Tennis</option>
+                                <option value="Volleyball">Volleyball</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Ville</label>
+                            <input type="text" name="City" class="form-control" placeholder="Ex: Tunis">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Date</label>
+                            <input type="date" name="Date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Prix max (DT)</label>
+                            <input type="number" name="MaxPrice" class="form-control" placeholder="Ex: 50">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i>Rechercher
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
 
-<div style="background: yellow; padding: 20px; margin: 20px; border: 5px solid red;">
-    <h2>Section de test</h2>
-    <p>Cette section devrait être dans le &lt;main&gt; du Layout.</p>
-    <button style="background: blue; color: white; padding: 10px 20px;">
-        Bouton test
-    </button>
-</div>
+<!-- Featured Terrains -->
+<section class="featured-section py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-6 fw-bold">Terrains populaires</h2>
+            <p class="text-muted">Découvrez nos terrains les plus réservés</p>
+        </div>
+        
+        @if (featuredTerrains.Any())
+        {
+            <div class="row g-4">
+                @foreach (var terrain in featuredTerrains)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card terrain-card h-100 shadow-sm hover-lift">
+                            <div class="terrain-image">
+                                @if (!string.IsNullOrEmpty(terrain.ImageUrl))
+                                {
+                                    <img src="@terrain.ImageUrl" class="card-img-top" alt="@terrain.Name">
+                                }
+                                else
+                                {
+                                    <div class="terrain-placeholder">
+                                        <i class="fas fa-image fa-3x text-muted"></i>
+                                    </div>
+                                }
+                                <span class="badge-sport">@terrain.SportType</span>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">@terrain.Name</h5>
+                                <p class="text-muted mb-2">
+                                    <i class="fas fa-map-marker-alt me-1"></i>@terrain.City
+                                </p>
+                                <div class="terrain-features mb-3">
+                                    @if (terrain.HasLighting)
+                                    {
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-lightbulb me-1"></i>Éclairage
+                                        </span>
+                                    }
+                                    @if (terrain.HasParking)
+                                    {
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-parking me-1"></i>Parking
+                                        </span>
+                                    }
+                                    @if (terrain.HasChangingRoom)
+                                    {
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-door-open me-1"></i>Vestiaires
+                                        </span>
+                                    }
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="h4 text-primary fw-bold mb-0">@terrain.PricePerHour.ToString("F2") DT</span>
+                                        <small class="text-muted d-block">par heure</small>
+                                    </div>
+                                    <a asp-controller="Terrain" asp-action="Details" asp-route-id="@terrain.Id" 
+                                       class="btn btn-primary">
+                                        Voir détails
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <div class="text-center mt-5">
+                <a asp-controller="Terrain" asp-action="Index" class="btn btn-outline-primary btn-lg">
+                    Voir tous les terrains <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-2"></i>Aucun terrain disponible pour le moment.
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-6 fw-bold">Pourquoi SportEase ?</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-clock fa-3x text-primary"></i>
+                    </div>
+                    <h4>Réservation rapide</h4>
+                    <p class="text-muted">Réservez en quelques clics, 24h/24 et 7j/7</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-shield-alt fa-3x text-success"></i>
+                    </div>
+                    <h4>Sécurisé</h4>
+                    <p class="text-muted">Vos données sont protégées et sécurisées</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-star fa-3x text-warning"></i>
+                    </div>
+                    <h4>Terrains vérifiés</h4>
+                    <p class="text-muted">Tous nos terrains sont vérifiés et de qualité</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+@if (!Context.Session.GetInt32("UserId").HasValue)
+{
+    <section class="cta-section py-5 bg-gradient-primary text-white">
+        <div class="container text-center">
+            <h2 class="display-5 fw-bold mb-4">Prêt à commencer ?</h2>
+            <p class="lead mb-4">Inscrivez-vous gratuitement et commencez à réserver dès maintenant</p>
+            <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg">
+                <i class="fas fa-user-plus me-2"></i>Créer un compte gratuitement
+            </a>
+        </div>
+    </section>
+}

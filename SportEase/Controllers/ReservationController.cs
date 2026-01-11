@@ -112,6 +112,7 @@ namespace SportEase.Web.Controllers
                 // Wait for DB to commit and notify clients via SignalR
                 await Task.Delay(200);
                 await _hubContext.Clients.Group("Admins").SendAsync("ReservationUpdated", "Une nouvelle réservation a été effectuée !");
+                await _hubContext.Clients.Group($"User_{userId}").SendAsync("ReservationUpdated", "Votre réservation a été créée avec succès !");
 
                 TempData["SuccessMessage"] = "Réservation créée avec succès! En attente de confirmation.";
                 return RedirectToAction("MyBookings");
@@ -292,6 +293,7 @@ namespace SportEase.Web.Controllers
                 {
                     // Notify clients via SignalR
                     await _hubContext.Clients.Group("Admins").SendAsync("ReservationUpdated", "Une réservation a été annulée.");
+                    await _hubContext.Clients.Group($"User_{userId}").SendAsync("ReservationUpdated", "Votre réservation a été annulée.");
 
                     TempData["SuccessMessage"] = "Réservation annulée avec succès";
                     return RedirectToAction("MyBookings");

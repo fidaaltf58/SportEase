@@ -13,7 +13,7 @@
         </ol>
     </nav>
 
-    <h2 class="fw-bold mb-4"><i class="fas fa-calendar-plus me-2"></i>Nouvelle réservation</h2>
+    <h2 class="fw-bold mb-4"><i class="fas fa-calendar-plus me-2"></i>Nouvelle réservation <span class="badge bg-warning text-dark">DEBUG MODE</span></h2>
 
     <div class="row">
         <!-- Formulaire de réservation -->
@@ -71,7 +71,7 @@
 
                         <!-- Boutons -->
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                            <button type="button" class="btn btn-primary btn-lg" id="submitBtn" disabled onclick="confirmSubmission()">
                                 <i class="fas fa-check me-2"></i>Confirmer la réservation
                             </button>
                             <a asp-controller="Terrain" asp-action="Details" asp-route-id="@Model.TerrainId"
@@ -119,7 +119,7 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         const terrainId = @Model.TerrainId;
-        const pricePerHour = @Model.Terrain.PricePerHour;
+        const pricePerHour = @Model.Terrain.PricePerHour.ToString(System.Globalization.CultureInfo.InvariantCulture);
         let selectedSlots = [];
 
         $(document).ready(function() {
@@ -138,9 +138,48 @@
             if (!date) return;
 
             $('#timeSlotsContainer').html('<div class="col-12 text-center text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Chargement...</div>');
-
+            
             $.get('/Reservation/GetAvailableSlots', { terrainId: terrainId, date: date }, function(slots) {
                 renderTimeSlots(slots);
+            });
+        }
+
+        function confirmSubmission() {
+            console.log("Confirm button clicked");
+            var form = $('#reservationForm');
+            
+            if (!form.valid()) {
+                console.log("Form invalid");
+                return;
+            }
+
+            if (typeof Swal === 'undefined') {
+                form[0].submit();
+                return;
+            }
+
+            Swal.fire({
+                title: 'Confirmation',
+                text: "Voulez-vous confirmer cette réservation ?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0d6efd',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Oui, confirmer',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Traitement en cours...',
+                        html: 'Veuillez patienter pendant la création de votre réservation.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    form[0].submit();
+                }
             });
         }
 

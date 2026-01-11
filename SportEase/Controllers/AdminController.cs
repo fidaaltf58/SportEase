@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SportEase.Web.Services.Interfaces;
 using SportEase.Web.Models.ViewModels;
+using Microsoft.AspNetCore.SignalR; // Add Import
+using SportEase.Web.Hubs; // Add Import
 
 namespace SportEase.Web.Controllers
 {
@@ -9,15 +11,18 @@ namespace SportEase.Web.Controllers
         private readonly ITerrainService _terrainService;
         private readonly IReservationService _reservationService;
         private readonly IStatisticsService _statisticsService;
+        private readonly IHubContext<ReservationHub> _hubContext; // Add field
 
         public AdminController(
             ITerrainService terrainService,
             IReservationService reservationService,
-            IStatisticsService statisticsService)
+            IStatisticsService statisticsService,
+            IHubContext<ReservationHub> hubContext) // Inject HubContext
         {
             _terrainService = terrainService;
             _reservationService = reservationService;
             _statisticsService = statisticsService;
+            _hubContext = hubContext;
         }
 
         // GET: /Admin/Dashboard
@@ -316,6 +321,17 @@ namespace SportEase.Web.Controllers
 
                 if (success)
                 {
+                    // Wait for DB to commit and notify clients via SignalR
+                    await Task.Delay(200);
+                    // Notify the specific user
+                    var reservation = await _reservationService.GetByIdAsync(id);
+                    if (reservation != null)
+                    {
+                        await _hubContext.Clients.Group($"User_{reservation.UserId}").SendAsync("ReservationUpdated", "Votre réservation a été confirmée !");
+                    }
+                    // Notify other admins to sync their lists
+                    await _hubContext.Clients.Group("Admins").SendAsync("ReservationUpdated", "");
+
                     TempData["SuccessMessage"] = "Réservation confirmée";
                 }
                 else
@@ -358,6 +374,15 @@ namespace SportEase.Web.Controllers
 
                 if (success)
                 {
+                    // Notify clients via SignalR
+                    var reservation = await _reservationService.GetByIdAsync(id);
+                    if (reservation != null)
+                    {
+                        await _hubContext.Clients.Group($"User_{reservation.UserId}").SendAsync("ReservationUpdated", "Votre réservation a été refusée.");
+                    }
+                     // Notify other admins to sync their lists
+                    await _hubContext.Clients.Group("Admins").SendAsync("ReservationUpdated", "");
+
                     TempData["SuccessMessage"] = "Réservation refusée";
                 }
                 else

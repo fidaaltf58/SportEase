@@ -232,22 +232,24 @@ namespace SportEase.Web.Services.Implementations
                 return new Dictionary<TimeSpan, bool>();
             }
 
+            // Optimization: Fetch all reservations for the day in one query
+            var reservations = await _reservationRepository.GetByTerrainAndDateAsync(terrainId, date);
+
             var slots = new Dictionary<TimeSpan, bool>();
             var currentTime = terrain.OpeningTime;
 
             while (currentTime < terrain.ClosingTime)
             {
-                var endTime = currentTime.Add(TimeSpan.FromHours(1));
+                var slotEndTime = currentTime.Add(TimeSpan.FromHours(1));
 
-                var hasConflict = await _reservationRepository.HasConflictAsync(
-                    terrainId,
-                    date,
-                    currentTime,
-                    endTime
-                );
+                // Check availability in memory
+                var hasConflict = reservations.Any(r => 
+                    (currentTime >= r.StartTime && currentTime < r.EndTime) ||
+                    (slotEndTime > r.StartTime && slotEndTime <= r.EndTime) ||
+                    (currentTime <= r.StartTime && slotEndTime >= r.EndTime));
 
                 slots[currentTime] = !hasConflict;
-                currentTime = endTime;
+                currentTime = slotEndTime;
             }
 
             return slots;

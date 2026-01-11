@@ -142,5 +142,14 @@ namespace SportEase.Web.Repositories.Implementations
                 .ThenByDescending(r => r.StartTime)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Reservation>> GetByTerrainAndDateAsync(int terrainId, DateTime date)
+        {
+            return await _context.Reservations
+                .Where(r => r.TerrainId == terrainId &&
+                           r.ReservationDate.Date == date.Date &&
+                           (r.Status == "Pending" || r.Status == "Confirmed"))
+                .ToListAsync();
+        }
     }
 }

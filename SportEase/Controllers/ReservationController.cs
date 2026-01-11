@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SportEase.Web.Services.Interfaces;
 using SportEase.Web.Models.ViewModels;
+using Microsoft.AspNetCore.SignalR; // Add SignalR
+using SportEase.Web.Hubs;
 
 namespace SportEase.Web.Controllers
 {
@@ -9,15 +11,21 @@ namespace SportEase.Web.Controllers
         private readonly IReservationService _reservationService;
         private readonly ITerrainService _terrainService;
         private readonly IStatisticsService _statisticsService;
+        private readonly IHubContext<ReservationHub> _hubContext;
+        private readonly ILogger<ReservationController> _logger;
 
         public ReservationController(
             IReservationService reservationService,
             ITerrainService terrainService,
-            IStatisticsService statisticsService)
+            IStatisticsService statisticsService,
+            IHubContext<ReservationHub> hubContext,
+            ILogger<ReservationController> logger)
         {
             _reservationService = reservationService;
             _terrainService = terrainService;
             _statisticsService = statisticsService;
+            _hubContext = hubContext;
+            _logger = logger;
         }
 
         // GET: /Reservation/Create/5
@@ -67,13 +75,25 @@ namespace SportEase.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateReservationViewModel model)
         {
+            _logger.LogInformation("Create POST called. TerrainId: {TerrainId}, Date: {Date}", model.TerrainId, model.ReservationDate);
+
             if (!IsUserLoggedIn())
             {
+                _logger.LogWarning("User not logged in.");
                 return RedirectToAction("Login", "Account");
             }
 
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("ModelState Invalid.");
+                foreach (var state in ModelState)
+                {
+                    foreach (var error in state.Value.Errors)
+                    {
+                        _logger.LogWarning("Error in {Field}: {Error}", state.Key, error.ErrorMessage);
+                    }
+                }
+
                 var terrain = await _terrainService.GetByIdAsync(model.TerrainId);
                 model.Terrain = terrain!;
                 model.AvailableSlots = await _reservationService.GetAvailableSlotsAsync(
@@ -85,13 +105,20 @@ namespace SportEase.Web.Controllers
             try
             {
                 var userId = GetCurrentUserId()!.Value;
+                _logger.LogInformation("Creating reservation for User {UserId}", userId);
                 var reservation = await _reservationService.CreateAsync(model, userId);
+                _logger.LogInformation("Reservation created: {ReservationId}", reservation.Id);
+
+                // Wait for DB to commit and notify clients via SignalR
+                await Task.Delay(200);
+                await _hubContext.Clients.Group("Admins").SendAsync("ReservationUpdated", "Une nouvelle réservation a été effectuée !");
 
                 TempData["SuccessMessage"] = "Réservation créée avec succès! En attente de confirmation.";
-                return RedirectToAction("Details", new { id = reservation.Id });
+                return RedirectToAction("MyBookings");
             }
             catch (InvalidOperationException ex)
             {
+                _logger.LogWarning(ex, "InvalidOperationException during creation: {Message}", ex.Message);
                 ModelState.AddModelError(string.Empty, ex.Message);
                 var terrain = await _terrainService.GetByIdAsync(model.TerrainId);
                 model.Terrain = terrain!;
@@ -102,6 +129,7 @@ namespace SportEase.Web.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Unexpected error during reservation creation");
                 ModelState.AddModelError(string.Empty, "Une erreur est survenue");
                 var terrain = await _terrainService.GetByIdAsync(model.TerrainId);
                 model.Terrain = terrain!;
@@ -124,7 +152,7 @@ namespace SportEase.Web.Controllers
             var viewModel = new ReservationListViewModel
             {
                 UpcomingReservations = allReservations
-                    .Where(r => (r.Status == "Pending" || r.Status == "Confirmed") &&
+                    .Where(r => r.Status == "Confirmed" &&
                                (r.ReservationDate > now.Date ||
                                 (r.ReservationDate == now.Date && r.EndTime > now.TimeOfDay)))
                     .OrderBy(r => r.ReservationDate)
@@ -262,6 +290,9 @@ namespace SportEase.Web.Controllers
 
                 if (success)
                 {
+                    // Notify clients via SignalR
+                    await _hubContext.Clients.Group("Admins").SendAsync("ReservationUpdated", "Une réservation a été annulée.");
+
                     TempData["SuccessMessage"] = "Réservation annulée avec succès";
                     return RedirectToAction("MyBookings");
                 }

@@ -18,5 +18,6 @@ namespace SportEase.Web.Repositories.Interfaces
         Task<int> GetActiveReservationsCountAsync(int userId);
         Task<IEnumerable<Reservation>> GetUpcomingReservationsAsync(int userId);
         Task<IEnumerable<Reservation>> GetPastReservationsAsync(int userId);
+        Task<IEnumerable<Reservation>> GetByTerrainAndDateAsync(int terrainId, DateTime date);
     }
 }

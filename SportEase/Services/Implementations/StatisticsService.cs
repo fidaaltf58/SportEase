@@ -22,7 +22,7 @@ namespace SportEase.Web.Services.Implementations
             var now = DateTime.Now;
 
             var upcomingReservations = allReservations
-                .Where(r => (r.Status == "Pending" || r.Status == "Confirmed") &&
+                .Where(r => (r.Status == "Confirmed" || r.Status == "Pending") &&
                            (r.ReservationDate > now.Date ||
                             (r.ReservationDate == now.Date && r.EndTime > now.TimeOfDay)))
                 .OrderBy(r => r.ReservationDate)

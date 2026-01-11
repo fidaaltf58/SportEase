@@ -139,7 +139,7 @@
                                     <td>
                                         @if (reservation.Status == "Pending")
                                         {
-                                            <form asp-action="ConfirmReservation" asp-route-id="@reservation.Id" method="post" class="d-inline">
+                                            <form asp-action="ConfirmReservation" asp-route-id="@reservation.Id" method="post" class="d-inline confirm-form">
                                                 <button type="submit" class="btn btn-sm btn-success" title="Confirmer">
                                                     <i class="fas fa-check"></i>
                                                 </button>
@@ -263,7 +263,7 @@
                                     <h5 class="text-primary mb-0">@reservation.TotalPrice.ToString("F2") DT</h5>
                                 </div>
                                 <div class="col-md-3 text-end">
-                                    <form asp-action="ConfirmReservation" asp-route-id="@reservation.Id" method="post" class="d-inline">
+                                    <form asp-action="ConfirmReservation" asp-route-id="@reservation.Id" method="post" class="d-inline confirm-form">
                                         <button type="submit" class="btn btn-success">
                                             <i class="fas fa-check me-1"></i>Confirmer
                                         </button>
@@ -287,3 +287,42 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.confirm-form').on('submit', function(e) {
+                // Fallback if SweetAlert isn't loaded
+                if (typeof Swal === 'undefined') {
+                    return;
+                }
+
+                e.preventDefault();
+                var form = this;
+                
+                Swal.fire({
+                    title: 'Confirmer la réservation',
+                    text: "Êtes-vous sûr de vouloir confirmer cette réservation ?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Oui, confirmer',
+                    cancelButtonText: 'Annuler'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Confirmation...',
+                            html: 'Veuillez patienter.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        form.submit();
+                    }
+                });
+            });
+        });
+    </script>
+}

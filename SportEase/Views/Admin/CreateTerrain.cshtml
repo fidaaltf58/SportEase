@@ -1,0 +1,198 @@
+﻿@using SportEase.Web.Models.ViewModels
+@model CreateTerrainViewModel
+@{
+    ViewData["Title"] = "Ajouter un terrain";
+}
+
+<div class="container mt-4 mb-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-action="Terrains">Mes terrains</a></li>
+            <li class="breadcrumb-item active">Nouveau terrain</li>
+        </ol>
+    </nav>
+
+    <h2 class="fw-bold mb-4"><i class="fas fa-plus-circle me-2"></i>Ajouter un nouveau terrain</h2>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form asp-action="CreateTerrain" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <h5 class="fw-bold mb-3">Informations générales</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label">Nom du terrain *</label>
+                                <input asp-for="Name" class="form-control" placeholder="Ex: Stade Municipal">
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SportType" class="form-label">Type de sport *</label>
+                                <select asp-for="SportType" class="form-select">
+                                    <option value="">-- Sélectionnez --</option>
+                                    @foreach (var sport in Model.SportTypes)
+                                    {
+                                        <option value="@sport">@sport</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="SportType" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="Address" class="form-label">Adresse *</label>
+                                <input asp-for="Address" class="form-control" placeholder="Ex: Avenue Habib Bourguiba">
+                                <span asp-validation-for="Address" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="City" class="form-label">Ville *</label>
+                                <select asp-for="City" class="form-select">
+                                    <option value="">-- Sélectionnez --</option>
+                                    @foreach (var city in Model.Cities)
+                                    {
+                                        <option value="@city">@city</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="City" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="fw-bold mb-3">Détails</h5>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Capacity" class="form-label">Capacité (joueurs) *</label>
+                                <input asp-for="Capacity" class="form-control" type="number" min="2" max="100">
+                                <span asp-validation-for="Capacity" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="PricePerHour" class="form-label">Prix par heure (DT) *</label>
+                                <input asp-for="PricePerHour" class="form-control" type="number" step="0.01" min="0">
+                                <span asp-validation-for="PricePerHour" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="4"
+                                      placeholder="Décrivez votre terrain..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ImageFile" class="form-label">Photo du terrain</label>
+                            <input asp-for="ImageFile" class="form-control" type="file" accept="image/*">
+                            <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                            <small class="form-text text-muted">Formats acceptés: JPG, PNG, GIF. Taille max: 5 MB</small>
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="fw-bold mb-3">Équipements disponibles</h5>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input asp-for="HasLighting" class="form-check-input">
+                                    <label asp-for="HasLighting" class="form-check-label">
+                                        <i class="fas fa-lightbulb me-1"></i>Éclairage
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input asp-for="HasParking" class="form-check-input">
+                                    <label asp-for="HasParking" class="form-check-label">
+                                        <i class="fas fa-parking me-1"></i>Parking
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input asp-for="HasChangingRoom" class="form-check-input">
+                                    <label asp-for="HasChangingRoom" class="form-check-label">
+                                        <i class="fas fa-door-open me-1"></i>Vestiaires
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="fw-bold mb-3">Horaires d'ouverture</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="OpeningTime" class="form-label">Heure d'ouverture *</label>
+                                <input asp-for="OpeningTime" class="form-control" type="time">
+                                <span asp-validation-for="OpeningTime" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ClosingTime" class="form-label">Heure de fermeture *</label>
+                                <input asp-for="ClosingTime" class="form-control" type="time">
+                                <span asp-validation-for="ClosingTime" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save me-2"></i>Créer le terrain
+                            </button>
+                            <a asp-action="Terrains" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Conseils</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Choisissez un nom descriptif
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Ajoutez une photo de qualité
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Décrivez les équipements disponibles
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Vérifiez les horaires d'ouverture
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Fixez un prix compétitif
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,204 @@
+﻿@using SportEase.Web.Models.ViewModels
+@model CreateReservationViewModel
+@{
+    ViewData["Title"] = "Nouvelle réservation";
+}
+
+<div class="container mt-4 mb-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Terrain" asp-action="Details" asp-route-id="@Model.TerrainId">@Model.Terrain.Name</a></li>
+            <li class="breadcrumb-item active">Réservation</li>
+        </ol>
+    </nav>
+
+    <h2 class="fw-bold mb-4"><i class="fas fa-calendar-plus me-2"></i>Nouvelle réservation</h2>
+
+    <div class="row">
+        <!-- Formulaire de réservation -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post" id="reservationForm">
+                        <input type="hidden" asp-for="TerrainId" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Sélection de la date -->
+                        <div class="mb-4">
+                            <label asp-for="ReservationDate" class="form-label fw-bold">
+                                <i class="fas fa-calendar me-2"></i>Sélectionnez une date
+                            </label>
+                            <input asp-for="ReservationDate" class="form-control form-control-lg"
+                                   type="date"
+                                   min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+                                   max="@DateTime.Today.AddDays(30).ToString("yyyy-MM-dd")"
+                                   id="dateInput">
+                            <span asp-validation-for="ReservationDate" class="text-danger"></span>
+                            <small class="form-text text-muted">Réservation possible de demain jusqu'à 30 jours à l'avance</small>
+                        </div>
+
+                        <!-- Créneaux horaires disponibles -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-clock me-2"></i>Sélectionnez un créneau horaire
+                            </label>
+                            <div id="timeSlotsContainer" class="row g-2">
+                                <div class="col-12 text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>Chargement des créneaux disponibles...
+                                </div>
+                            </div>
+                            <input type="hidden" asp-for="StartTime" id="startTimeInput">
+                            <input type="hidden" asp-for="EndTime" id="endTimeInput">
+                            <span asp-validation-for="StartTime" class="text-danger d-block"></span>
+                        </div>
+
+                        <!-- Durée et prix estimé -->
+                        <div class="card bg-light mb-4" id="priceCard" style="display: none;">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Durée:</strong> <span id="durationDisplay">-</span></p>
+                                        <p class="mb-0"><strong>Prix unitaire:</strong> @Model.Terrain.PricePerHour.ToString("F2") DT/h</p>
+                                    </div>
+                                    <div class="col-md-6 text-md-end">
+                                        <p class="mb-1 text-muted">Prix total estimé:</p>
+                                        <h4 class="text-primary fw-bold mb-0" id="totalPriceDisplay">0.00 DT</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                                <i class="fas fa-check me-2"></i>Confirmer la réservation
+                            </button>
+                            <a asp-controller="Terrain" asp-action="Details" asp-route-id="@Model.TerrainId"
+                               class="btn btn-secondary btn-lg">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Récapitulatif du terrain -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Récapitulatif</h5>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.Terrain.ImageUrl))
+                    {
+                        <img src="@Model.Terrain.ImageUrl" class="img-fluid rounded mb-3" alt="@Model.Terrain.Name">
+                    }
+                    <h5 class="fw-bold">@Model.Terrain.Name</h5>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-map-marker-alt me-1"></i>@Model.Terrain.FullAddress
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-tag me-1"></i><strong>Sport:</strong> @Model.Terrain.SportType
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-users me-1"></i><strong>Capacité:</strong> @Model.Terrain.Capacity joueurs
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-clock me-1"></i><strong>Horaires:</strong>
+                        @Model.Terrain.OpeningTime.ToString(@"hh\:mm") - @Model.Terrain.ClosingTime.ToString(@"hh\:mm")
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const terrainId = @Model.TerrainId;
+        const pricePerHour = @Model.Terrain.PricePerHour;
+        let selectedSlots = [];
+
+        $(document).ready(function() {
+            // Charger les créneaux pour la date sélectionnée
+            $('#dateInput').on('change', function() {
+                loadTimeSlots($(this).val());
+            });
+
+            // Charger les créneaux pour la date initiale
+            if ($('#dateInput').val()) {
+                loadTimeSlots($('#dateInput').val());
+            }
+        });
+
+        function loadTimeSlots(date) {
+            if (!date) return;
+
+            $('#timeSlotsContainer').html('<div class="col-12 text-center text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Chargement...</div>');
+
+            $.get('/Reservation/GetAvailableSlots', { terrainId: terrainId, date: date }, function(slots) {
+                renderTimeSlots(slots);
+            });
+        }
+
+        function renderTimeSlots(slots) {
+            let html = '';
+            slots.forEach(slot => {
+                const disabled = !slot.available ? 'disabled' : '';
+                const bgClass = !slot.available ? 'btn-outline-secondary' : 'btn-outline-primary';
+                html += `
+                    <div class="col-md-6 col-lg-4">
+                        <button type="button" class="btn ${bgClass} w-100 time-slot-btn"
+                                data-time="${slot.time}"
+                                data-display="${slot.displayTime}"
+                                ${disabled}>
+                            ${slot.displayTime}
+                            ${!slot.available ? '<i class="fas fa-lock ms-2"></i>' : ''}
+                        </button>
+                    </div>
+                `;
+            });
+            $('#timeSlotsContainer').html(html);
+
+            // Événement de sélection
+            $('.time-slot-btn').on('click', function() {
+                if ($(this).prop('disabled')) return;
+
+                $(this).toggleClass('btn-outline-primary btn-primary active');
+                updateSelection();
+            });
+        }
+
+        function updateSelection() {
+            selectedSlots = [];
+            $('.time-slot-btn.active').each(function() {
+                selectedSlots.push($(this).data('time'));
+            });
+
+            if (selectedSlots.length > 0) {
+                selectedSlots.sort();
+                const startTime = selectedSlots[0];
+                const endSlot = selectedSlots[selectedSlots.length - 1];
+                const [hours, minutes] = endSlot.split(':');
+                const endTime = `${String(parseInt(hours) + 1).padStart(2, '0')}:${minutes}`;
+
+                $('#startTimeInput').val(startTime);
+                $('#endTimeInput').val(endTime);
+
+                const duration = selectedSlots.length;
+                const totalPrice = (duration * pricePerHour).toFixed(2);
+
+                $('#durationDisplay').text(duration + ' heure(s)');
+                $('#totalPriceDisplay').text(totalPrice + ' DT');
+                $('#priceCard').show();
+                $('#submitBtn').prop('disabled', false);
+            } else {
+                $('#priceCard').hide();
+                $('#submitBtn').prop('disabled', true);
+            }
+        }
+    </script>
+}

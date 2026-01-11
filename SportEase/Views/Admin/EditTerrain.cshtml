@@ -1,0 +1,203 @@
+﻿@using SportEase.Web.Models.ViewModels
+@model EditTerrainViewModel
+@{
+    ViewData["Title"] = "Modifier le terrain";
+}
+
+<div class="container mt-4 mb-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-action="Terrains">Mes terrains</a></li>
+            <li class="breadcrumb-item active">Modifier</li>
+        </ol>
+    </nav>
+
+    <h2 class="fw-bold mb-4"><i class="fas fa-edit me-2"></i>Modifier le terrain</h2>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form asp-action="EditTerrain" method="post" enctype="multipart/form-data">
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <h5 class="fw-bold mb-3">Informations générales</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label">Nom du terrain *</label>
+                                <input asp-for="Name" class="form-control">
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SportType" class="form-label">Type de sport *</label>
+                                <select asp-for="SportType" class="form-select">
+                                    @foreach (var sport in Model.SportTypes)
+                                    {
+                                        <option value="@sport">@sport</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="SportType" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="Address" class="form-label">Adresse *</label>
+                                <input asp-for="Address" class="form-control">
+                                <span asp-validation-for="Address" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="City" class="form-label">Ville *</label>
+                                <select asp-for="City" class="form-select">
+                                    @foreach (var city in Model.Cities)
+                                    {
+                                        <option value="@city">@city</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="City" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="fw-bold mb-3">Détails</h5>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Capacity" class="form-label">Capacité (joueurs) *</label>
+                                <input asp-for="Capacity" class="form-control" type="number" min="2" max="100">
+                                <span asp-validation-for="Capacity" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="PricePerHour" class="form-label">Prix par heure (DT) *</label>
+                                <input asp-for="PricePerHour" class="form-control" type="number" step="0.01" min="0">
+                                <span asp-validation-for="PricePerHour" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="IsActive" class="form-label">Statut</label>
+                                <select asp-for="IsActive" class="form-select">
+                                    <option value="true">Actif</option>
+                                    <option value="false">Inactif</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ImageFile" class="form-label">Photo du terrain</label>
+                            @if (!string.IsNullOrEmpty(Model.CurrentImageUrl))
+                            {
+                                <div class="mb-2">
+                                    <img src="@Model.CurrentImageUrl" alt="Image actuelle" class="img-thumbnail" style="max-width: 200px;">
+                                    <p class="small text-muted mt-1">Image actuelle</p>
+                                </div>
+                            }
+                            <input asp-for="ImageFile" class="form-control" type="file" accept="image/*">
+                            <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                            <small class="form-text text-muted">Laissez vide pour conserver l'image actuelle</small>
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="fw-bold mb-3">Équipements disponibles</h5>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input asp-for="HasLighting" class="form-check-input">
+                                    <label asp-for="HasLighting" class="form-check-label">
+                                        <i class="fas fa-lightbulb me-1"></i>Éclairage
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input asp-for="HasParking" class="form-check-input">
+                                    <label asp-for="HasParking" class="form-check-label">
+                                        <i class="fas fa-parking me-1"></i>Parking
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input asp-for="HasChangingRoom" class="form-check-input">
+                                    <label asp-for="HasChangingRoom" class="form-check-label">
+                                        <i class="fas fa-door-open me-1"></i>Vestiaires
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="fw-bold mb-3">Horaires d'ouverture</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="OpeningTime" class="form-label">Heure d'ouverture *</label>
+                                <input asp-for="OpeningTime" class="form-control" type="time">
+                                <span asp-validation-for="OpeningTime" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ClosingTime" class="form-label">Heure de fermeture *</label>
+                                <input asp-for="ClosingTime" class="form-control" type="time">
+                                <span asp-validation-for="ClosingTime" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Enregistrer les modifications
+                            </button>
+                            <a asp-action="Terrains" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong>Créé le:</strong> @Model.Id
+                    </p>
+                    <p class="mb-2">
+                        <strong>Statut:</strong>
+                        <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">
+                            @(Model.IsActive ? "Actif" : "Inactif")
+                        </span>
+                    </p>
+                    <hr>
+                    <p class="text-muted small mb-0">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        Vous pouvez désactiver le terrain sans le supprimer pour arrêter temporairement les réservations.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

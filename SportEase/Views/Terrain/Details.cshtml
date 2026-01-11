@@ -1,0 +1,201 @@
+﻿@using SportEase.Web.Models.ViewModels
+@model TerrainDetailsViewModel
+@{
+    ViewData["Title"] = Model.Terrain.Name;
+}
+
+<div class="container mt-4 mb-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Terrains</a></li>
+            <li class="breadcrumb-item active">@Model.Terrain.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Images et infos principales -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                @if (!string.IsNullOrEmpty(Model.Terrain.ImageUrl))
+                {
+                    <img src="@Model.Terrain.ImageUrl" class="card-img-top" alt="@Model.Terrain.Name" style="height: 400px; object-fit: cover;">
+                }
+                else
+                {
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <i class="fas fa-image fa-5x text-muted"></i>
+                    </div>
+                }
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h2 class="fw-bold mb-2">@Model.Terrain.Name</h2>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-map-marker-alt me-1"></i>@Model.Terrain.FullAddress
+                            </p>
+                        </div>
+                        <span class="badge bg-primary fs-5">@Model.Terrain.SportType</span>
+                    </div>
+
+                    <hr>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><i class="fas fa-users text-primary me-2"></i><strong>Capacité:</strong> @Model.Terrain.Capacity joueurs</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><i class="fas fa-clock text-primary me-2"></i><strong>Horaires:</strong> @Model.Terrain.OpeningTime.ToString(@"hh\:mm") - @Model.Terrain.ClosingTime.ToString(@"hh\:mm")</p>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Terrain.Description))
+                    {
+                        <h5 class="fw-bold mb-3">Description</h5>
+                        <p class="text-muted">@Model.Terrain.Description</p>
+                    }
+
+                    <h5 class="fw-bold mb-3">Équipements disponibles</h5>
+                    <div class="d-flex gap-2 flex-wrap">
+                        @if (Model.Terrain.HasLighting)
+                        {
+                            <span class="badge bg-success"><i class="fas fa-lightbulb me-1"></i>Éclairage</span>
+                        }
+                        @if (Model.Terrain.HasParking)
+                        {
+                            <span class="badge bg-success"><i class="fas fa-parking me-1"></i>Parking</span>
+                        }
+                        @if (Model.Terrain.HasChangingRoom)
+                        {
+                            <span class="badge bg-success"><i class="fas fa-door-open me-1"></i>Vestiaires</span>
+                        }
+                        @if (!Model.Terrain.HasLighting && !Model.Terrain.HasParking && !Model.Terrain.HasChangingRoom)
+                        {
+                            <span class="text-muted">Aucun équipement supplémentaire</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Réservations à venir -->
+            @if (Model.UpcomingReservations.Any())
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Réservations à venir</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            @foreach (var reservation in Model.UpcomingReservations)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <i class="fas fa-calendar me-2"></i>@reservation.FormattedDate
+                                            <span class="mx-2">•</span>
+                                            <i class="fas fa-clock me-2"></i>@reservation.TimeSlot
+                                        </div>
+                                        <span class="@reservation.StatusBadgeClass">@reservation.StatusDisplayText</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar - Prix et réservation -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h3 class="text-primary fw-bold mb-0">@Model.Terrain.PricePerHour.ToString("F2") DT</h3>
+                        <small class="text-muted">par heure</small>
+                    </div>
+
+                    @if (Model.CanReserve)
+                    {
+                        <a asp-controller="Reservation" asp-action="Create" asp-route-id="@Model.Terrain.Id"
+                           class="btn btn-primary w-100 btn-lg mb-3">
+                            <i class="fas fa-calendar-plus me-2"></i>Réserver maintenant
+                        </a>
+                    }
+                    else if (Context.Session.GetInt32("UserId").HasValue)
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>Les administrateurs ne peuvent pas réserver
+                        </div>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@($"/Terrain/Details/{Model.Terrain.Id}")"
+                           class="btn btn-primary w-100 btn-lg mb-3">
+                            <i class="fas fa-sign-in-alt me-2"></i>Connectez-vous pour réserver
+                        </a>
+                    }
+
+                    <hr>
+
+                    <h6 class="fw-bold mb-3">Disponibilités aujourd'hui</h6>
+                    @if (Model.TodaySlots.Any())
+                    {
+                        <div class="slots-grid">
+                            @foreach (var slot in Model.TodaySlots.OrderBy(s => s.Key))
+                            {
+                                <div class="slot-item @(slot.Value ? "available" : "occupied")">
+                                    <small>@slot.Key.ToString(@"hh\:mm")</small>
+                                    @if (slot.Value)
+                                    {
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-times-circle text-danger"></i>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center">Aucun créneau disponible</p>
+                    }
+
+                    <hr>
+
+                    <h6 class="fw-bold mb-3">Informations du propriétaire</h6>
+                    <p class="mb-1"><strong>Nom:</strong> @Model.Terrain.Admin.FullName</p>
+                    <p class="mb-0"><strong>Téléphone:</strong> @Model.Terrain.Admin.Phone</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .slot-item {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 0.25rem;
+            text-align: center;
+        }
+
+            .slot-item.available {
+                background-color: #d4edda;
+                border-color: #c3e6cb;
+            }
+
+            .slot-item.occupied {
+                background-color: #f8d7da;
+                border-color: #f5c6cb;
+            }
+    </style>
+}

@@ -1,0 +1,254 @@
+﻿@using SportEase.Web.Models.ViewModels
+@model ReservationListViewModel
+@{
+    ViewData["Title"] = "Mes réservations";
+}
+
+<div class="container mt-4 mb-5">
+    <h2 class="fw-bold mb-4"><i class="fas fa-calendar-check me-2"></i>Mes réservations</h2>
+
+    <!-- Statistiques -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total</h5>
+                    <h2 class="mb-0">@Model.TotalReservations</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Actives</h5>
+                    <h2 class="mb-0">@Model.ActiveReservations</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">En attente</h5>
+                    <h2 class="mb-0">@Model.PendingReservations.Count</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total dépensé</h5>
+                    <h2 class="mb-0">@Model.TotalSpent.ToString("F2") DT</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs de navigation -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#upcoming">
+                À venir (@Model.UpcomingReservations.Count)
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#pending">
+                En attente (@Model.PendingReservations.Count)
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#past">
+                Passées (@Model.PastReservations.Count)
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#cancelled">
+                Annulées (@Model.CancelledReservations.Count)
+            </a>
+        </li>
+    </ul>
+
+    <!-- Contenu des tabs -->
+    <div class="tab-content">
+        <!-- Réservations à venir -->
+        <div class="tab-pane fade show active" id="upcoming">
+            @if (Model.UpcomingReservations.Any())
+            {
+                <div class="list-group">
+                    @foreach (var reservation in Model.UpcomingReservations)
+                    {
+                        <div class="list-group-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h5 class="mb-1 fw-bold">@reservation.Terrain.Name</h5>
+                                    <p class="mb-1 text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>@reservation.Terrain.City
+                                    </p>
+                                    <p class="mb-0">
+                                        <i class="fas fa-calendar me-1"></i>@reservation.FormattedDate
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-clock me-1"></i>@reservation.TimeSlot
+                                    </p>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="@reservation.StatusBadgeClass">@reservation.StatusDisplayText</span>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <h5 class="text-primary mb-0">@reservation.TotalPrice.ToString("F2") DT</h5>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <a asp-action="Details" asp-route-id="@reservation.Id" class="btn btn-sm btn-outline-primary">
+                                        Détails
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Vous n'avez aucune réservation à venir.
+                </div>
+            }
+        </div>
+
+        <!-- Réservations en attente -->
+        <div class="tab-pane fade" id="pending">
+            @if (Model.PendingReservations.Any())
+            {
+                <div class="list-group">
+                    @foreach (var reservation in Model.PendingReservations)
+                    {
+                        <div class="list-group-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h5 class="mb-1 fw-bold">@reservation.Terrain.Name</h5>
+                                    <p class="mb-1 text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>@reservation.Terrain.City
+                                    </p>
+                                    <p class="mb-0">
+                                        <i class="fas fa-calendar me-1"></i>@reservation.FormattedDate
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-clock me-1"></i>@reservation.TimeSlot
+                                    </p>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="@reservation.StatusBadgeClass">@reservation.StatusDisplayText</span>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <h5 class="text-primary mb-0">@reservation.TotalPrice.ToString("F2") DT</h5>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <a asp-action="Details" asp-route-id="@reservation.Id" class="btn btn-sm btn-outline-primary">
+                                        Détails
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Aucune réservation en attente de confirmation.
+                </div>
+            }
+        </div>
+
+        <!-- Réservations passées -->
+        <div class="tab-pane fade" id="past">
+            @if (Model.PastReservations.Any())
+            {
+                <div class="list-group">
+                    @foreach (var reservation in Model.PastReservations)
+                    {
+                        <div class="list-group-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h5 class="mb-1 fw-bold">@reservation.Terrain.Name</h5>
+                                    <p class="mb-1 text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>@reservation.Terrain.City
+                                    </p>
+                                    <p class="mb-0">
+                                        <i class="fas fa-calendar me-1"></i>@reservation.FormattedDate
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-clock me-1"></i>@reservation.TimeSlot
+                                    </p>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="badge bg-secondary">Terminée</span>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <h5 class="text-muted mb-0">@reservation.TotalPrice.ToString("F2") DT</h5>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <a asp-action="Details" asp-route-id="@reservation.Id" class="btn btn-sm btn-outline-secondary">
+                                        Détails
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Aucune réservation passée.
+                </div>
+            }
+        </div>
+
+        <!-- Réservations annulées -->
+        <div class="tab-pane fade" id="cancelled">
+            @if (Model.CancelledReservations.Any())
+            {
+                <div class="list-group">
+                    @foreach (var reservation in Model.CancelledReservations)
+                    {
+                        <div class="list-group-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h5 class="mb-1 fw-bold">@reservation.Terrain.Name</h5>
+                                    <p class="mb-1 text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>@reservation.Terrain.City
+                                    </p>
+                                    <p class="mb-0">
+                                        <i class="fas fa-calendar me-1"></i>@reservation.FormattedDate
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-clock me-1"></i>@reservation.TimeSlot
+                                    </p>
+                                    @if (!string.IsNullOrEmpty(reservation.CancellationReason))
+                                    {
+                                        <p class="mb-0 mt-1 small text-danger">
+                                            <i class="fas fa-info-circle me-1"></i>@reservation.CancellationReason
+                                        </p>
+                                    }
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="@reservation.StatusBadgeClass">@reservation.StatusDisplayText</span>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <h5 class="text-muted mb-0"><s>@reservation.TotalPrice.ToString("F2") DT</s></h5>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <a asp-action="Details" asp-route-id="@reservation.Id" class="btn btn-sm btn-outline-secondary">
+                                        Détails
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Aucune réservation annulée.
+                </div>
+            }
+        </div>
+    </div>
+</div>
